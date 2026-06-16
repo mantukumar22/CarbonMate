@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common verification and identity helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entity validation schemas
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['userId', 'email'])
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.email is string
+        && data.email.size() <= 256;
+    }
+
+    function isValidDailyEntry(data) {
+      return data.keys().hasAll(['id', 'userId', 'date', 'raw_text', 'estimated_co2_kg'])
+        && data.id is string
+        && data.id.size() <= 128
+        && data.userId is string
+        && data.userId == request.auth.uid
+        && data.date is string
+        && data.date.size() <= 20
+        && data.raw_text is string
+        && data.raw_text.size() <= 10000
+        && data.estimated_co2_kg is number;
+    }
+
+    // User Profile Documents
+    match /users/{userId} {
+      // Setup stage may not require a fully verified email to set up initial profiles,
+      // but only owner can access.
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow delete: if isOwner(userId);
+
+      // User Carbon Daily Footprint Logs Subcollection
+      match /entries/{entryId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(entryId) && isValidDailyEntry(request.resource.data);
+        allow update: if isOwner(userId) && isValidId(entryId) && isValidDailyEntry(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

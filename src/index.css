@@ -1,0 +1,175 @@
+body {
+  background-color: #0a0f0a;
+  color: #E8F0E3;
+}
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-card: var(--card);
+  --color-card-elevated: var(--card-elevated);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-brand-primary: var(--brand-primary);
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-error: var(--status-error);
+  --color-border-custom: var(--border-custom);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --bg-base: #0a0f0a;
+  --bg-surface: #121714;
+  --card: #1B2119;
+  --card-elevated: #222d20;
+  --border-custom: #2C342B;
+  --text-primary: #E8F0E3;
+  --text-secondary: #A8B8AA;
+  --text-muted: #6B7F6A;
+  --brand-primary: #4ADE80;
+  --status-success: #34D399;
+  --status-warning: #FBBF24;
+  --status-error: #F87171;
+
+  --background: #0a0f0a;
+  --surface: #121714;
+  --border: #2C342B;
+  --green-primary: #4ADE80;
+  --green-secondary: #22C55E;
+  --green-dim: #166534;
+  --green-glow: rgba(74,222,128,0.15);
+  --red: #F87171;
+  --yellow: #FBBF24;
+  --blue: #60A5FA;
+}
+
+/* Custom scrollbar hiding utilities */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(-4px) translateX(2px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) scale(1); opacity: 0.12; }
+  50% { transform: translateY(-8px) scale(1.05); opacity: 0.18; }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes sway-reverse {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-3deg); }
+}
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes celebratory-bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08) translateY(-2px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-sway {
+  transform-origin: bottom center;
+  animation: sway 5s ease-in-out infinite;
+}
+
+.animate-sway-reverse {
+  transform-origin: bottom center;
+  animation: sway-reverse 6s ease-in-out infinite;
+}
+
+.animate-blink {
+  transform-origin: center;
+  animation: blink 4s infinite;
+}
+
+.animate-spin-slow {
+  transform-origin: center;
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+.animate-celebrate {
+  animation: celebratory-bounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite alternate;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes highlightEntry {
+  0% {
+    border-left: 3px solid #10b981;
+    background-color: rgba(16, 185, 129, 0.15);
+  }
+  70% {
+    border-left: 3px solid #10b981;
+    background-color: rgba(16, 185, 129, 0.15);
+  }
+  100% {
+    border-left: 3px solid transparent;
+    background-color: transparent;
+  }
+}
+
+.highlight-new {
+  animation: highlightEntry 2s ease-out forwards;
+}
+

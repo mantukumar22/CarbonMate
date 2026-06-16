@@ -1,0 +1,6 @@
+{
+  "name": "CarbonMate",
+  "description": "Your daily carbon footprint tracker and eco-friendly companion EcoBuddy.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
