@@ -1,4 +1,6 @@
 import React from "react";
+import Image from "./Image";
+import { motion, AnimatePresence } from "motion/react";
 
 interface EcoBuddyProps {
   co2Score?: number; // Current day's score to adjust facial expressions and color accents
@@ -113,23 +115,57 @@ export default function EcoBuddy({ co2Score = 0, className = "", isThinking = fa
     }
   };
 
+  const getEcoBuddyMood = (co2Today: number) => {
+    if (co2Today === 0) return {
+      image: "/images/ecobuddy-neutral.png",
+      title: "Start logging to see EcoBuddy react!",
+      message: "Tell me what you did today 🌿"
+    };
+    if (co2Today < 5) return {
+      image: "/images/ecobuddy-happy.png",
+      title: "EcoBuddy is Happy! 😄",
+      message: "Amazing! Very low pollution today!"
+    };
+    if (co2Today < 15) return {
+      image: "/images/ecobuddy-neutral.png",
+      title: "EcoBuddy is Okay 😐",
+      message: "Not bad! Try to reduce car use tomorrow"
+    };
+    return {
+      image: "/images/ecobuddy-sad.png",
+      title: "EcoBuddy is Worried 😟",
+      message: "High pollution today. Try bus or auto tomorrow!"
+    };
+  };
+
+  const moodData = getEcoBuddyMood(co2Score);
   const isHappy = co2Score < 15;
-  const companionImg = isHappy
-    ? "/src/assets/images/happy_buddy_1781281879692.jpg"
-    : "/src/assets/images/concerned_buddy_1781281892147.jpg";
 
   return (
     <div className={`p-4 rounded-3xl border text-center flex flex-col items-center gap-3.5 transition-all duration-300 ${moodColor} ${className}`} id="ecobuddy-animated-character">
-      {/* High-Fidelity Companion Illustration Container */}
+      {/* High-Fidelity Companion Illustration Container with Crossfade */}
       <div className="w-full rounded-2xl overflow-hidden aspect-square relative border border-black/5 shadow-sm group bg-slate-900/40">
-        <img
-          src={companionImg}
-          alt={isHappy ? "Happy EcoBuddy Illustration" : "Concerned EcoBuddy Illustration"}
-          referrerPolicy="no-referrer"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        <div className="absolute top-2 left-2 bg-slate-950/80 backdrop-blur-xs text-[9px] font-black tracking-widest text-white px-2 py-0.5 rounded-full uppercase">
-          {isHappy ? "🌳 Green" : "⚠️ High"}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={moodData.image}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="w-full h-full"
+          >
+            <Image
+              src={moodData.image}
+              alt={moodData.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              width={250}
+              height={250}
+              priority={true}
+            />
+          </motion.div>
+        </AnimatePresence>
+        <div className="absolute top-2 left-2 bg-slate-950/80 backdrop-blur-xs text-[9px] font-black tracking-widest text-white px-2 py-0.5 rounded-full uppercase z-10">
+          {co2Score === 0 ? "📢 New" : isHappy ? "🌳 Green" : "⚠️ High"}
         </div>
       </div>
 
@@ -202,12 +238,12 @@ export default function EcoBuddy({ co2Score = 0, className = "", isThinking = fa
           )}
         </div>
 
-        <div className="text-left overflow-hidden">
-          <span className="text-[9px] font-black uppercase tracking-widest bg-slate-900/10 px-2 py-0.5 rounded-md inline-block">
-            EcoBuddy Says
+        <div className="text-left overflow-hidden flex-1">
+          <span className="text-[9px] font-black uppercase tracking-widest bg-slate-900/10 px-2 py-0.5 rounded-md inline-block text-slate-800 dark:text-emerald-100">
+            {moodData.title}
           </span>
-          <p className="text-[11px] font-bold mt-0.5 text-slate-700 leading-snug truncate">
-            {moodLabel}
+          <p className="text-[11px] font-bold mt-0.5 text-slate-700 dark:text-emerald-50 leading-snug">
+            {moodData.message}
           </p>
         </div>
       </div>

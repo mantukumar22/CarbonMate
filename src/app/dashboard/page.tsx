@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { DailyEntry } from "../../types";
 import ImpactCard from "../../components/ImpactCard";
 import EcoBuddy from "../../components/EcoBuddy";
+import { getUserDisplayName } from "../../lib/getUserDisplayName";
 import { 
   Car, 
   Utensils, 
@@ -32,6 +34,7 @@ interface DashboardPageProps {
   onSelectEntry: (entry: DailyEntry) => void;
   selectedEntry: DailyEntry | null;
   onNavigateToTab: (tab: "dashboard" | "log" | "insights" | "onboarding") => void;
+  user?: any;
 }
 
 export default function DashboardPage({
@@ -39,7 +42,9 @@ export default function DashboardPage({
   onSelectEntry,
   selectedEntry,
   onNavigateToTab,
+  user,
 }: DashboardPageProps) {
+  const displayName = getUserDisplayName(user);
   // Aggregate overall carbon metrics
   const totalCo2 = entries.reduce((acc, curr) => acc + curr.estimated_co2_kg, 0);
   const averageCo2 = entries.length ? (totalCo2 / entries.length).toFixed(2) : "0.00";
@@ -80,6 +85,7 @@ export default function DashboardPage({
 
   // Track state for badge pop-ups or click triggers
   const [badgeSuccessMessage, setBadgeSuccessMessage] = useState<string | null>(null);
+  const [selectedBadgeDetail, setSelectedBadgeDetail] = useState<BadgeItem | null>(null);
 
   // Core gamification Achievements/Badges
   const badges: BadgeItem[] = [
@@ -140,7 +146,7 @@ export default function DashboardPage({
             EcoBuddy Friend
           </span>
           <h2 className="text-xl md:text-2xl font-black font-sans leading-tight">
-            Welcome to CarbonMate! 🌿
+            Namaste, {displayName}! 👋
           </h2>
           <p className="text-slate-300 text-xs md:text-sm leading-relaxed font-medium">
             Your total pollution score is <strong className="text-emerald-300 font-extrabold">{totalCo2.toFixed(2)} kg pollution (CO2)</strong>. Let's take small steps to protect our Earth.
@@ -235,7 +241,7 @@ export default function DashboardPage({
             />
 
             {/* Achievements milestone subsection */}
-            <div className="space-y-3">
+            <div className="space-y-3" id="achievements-section-container">
               <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest px-1 flex items-center gap-1.5">
                 <Award className="w-4 h-4 text-brand-primary" /> Achievements & Milestones
               </h3>
@@ -244,11 +250,80 @@ export default function DashboardPage({
                   <MilestoneBadge 
                     key={badge.id} 
                     badge={badge} 
-                    onShowJoy={() => handleShowBadgeJoy(badge.name)} 
+                    onShowJoy={() => {
+                      if (badge.unlocked) {
+                        handleShowBadgeJoy(badge.name);
+                      }
+                      setSelectedBadgeDetail(badge);
+                    }}
                   />
                 ))}
               </div>
             </div>
+
+            {/* Achievement Badge Detail Modal */}
+            <AnimatePresence>
+              {selectedBadgeDetail && (
+                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 15 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className="bg-bg-surface border border-border-custom max-w-sm w-full rounded-3xl p-6 shadow-2xl relative space-y-5 text-center overflow-hidden"
+                    id="badge-detail-modal"
+                  >
+                    {/* Background celebratory radial gradient */}
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none -z-10" />
+
+                    <div className="flex justify-between items-start">
+                      <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
+                        selectedBadgeDetail.unlocked ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/15" : "text-amber-700 dark:text-amber-300 bg-amber-500/15"
+                      }`}>
+                        {selectedBadgeDetail.unlocked ? "🏆 Completed" : "🔒 In Progress"}
+                      </span>
+                      <button 
+                        onClick={() => setSelectedBadgeDetail(null)}
+                        className="p-1.5 px-3 bg-bg-base hover:bg-slate-800 border border-border-custom rounded-xl text-xs font-black text-text-secondary hover:text-text-primary cursor-pointer transition"
+                      >
+                        Close
+                      </button>
+                    </div>
+
+                    {/* Scaled badge icon */}
+                    <div className="flex justify-center py-2">
+                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shrink-0 border border-current bg-current/5 relative overflow-hidden ${
+                        selectedBadgeDetail.unlocked ? "text-brand-primary" : "text-text-secondary opacity-40 grayscale"
+                      }`}>
+                        <Award className="w-10 h-10 relative z-1" />
+                      </div>
+                    </div>
+
+                    {/* Details text */}
+                    <div className="space-y-1.5">
+                      <h4 className="text-base font-black text-text-primary">
+                        {selectedBadgeDetail.name}
+                      </h4>
+                      <p className="text-xs text-text-secondary leading-relaxed font-semibold">
+                        {selectedBadgeDetail.desc}
+                      </p>
+                    </div>
+
+                    <div className="bg-bg-base/80 p-3.5 rounded-2xl border border-border-custom text-left space-y-1">
+                      <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">Unlock criteria:</p>
+                      <p className="text-xs font-black text-text-primary">{selectedBadgeDetail.requirement}</p>
+                    </div>
+
+                    <div className="text-[10px] font-black text-text-secondary flex justify-between items-center px-1">
+                      <span>Status:</span>
+                      <span className="text-brand-primary">
+                        {selectedBadgeDetail.unlocked ? "Unlocked (Active Session) 🌿" : "Earn this by changing daily habits!"}
+                      </span>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
 
             <div className="bg-bg-surface/50 border border-border-custom rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">

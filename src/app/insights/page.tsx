@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "../../components/Image";
 import { DailyEntry } from "../../types";
 import { EMISSION_FACTORS, COMMUTE_FACTORS, DIET_FACTORS } from "../../lib/emissionFactors";
 import { Sparkles, Award, TrendingDown, RefreshCw, BarChart2, BookOpen } from "lucide-react";
@@ -147,11 +148,12 @@ export default function InsightsPage({
       {/* Sustainable Goal forest illustration card */}
       <div className="bg-bg-surface/45 backdrop-blur-md border border-border-custom rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-center gap-6 overflow-hidden shadow-sm hover:shadow-md transition duration-300">
         <div className="w-full md:w-1/3 rounded-2xl overflow-hidden aspect-video md:aspect-[4/3] shrink-0 border border-border-custom">
-          <img
-            src="/src/assets/images/impact_forest_trees_1781281907201.jpg"
+          <Image
+            src="/illustrations/forest.png"
             alt="Pristine Forest Ecosystem"
-            referrerPolicy="no-referrer"
             className="w-full h-full object-cover"
+            width={300}
+            height={200}
           />
         </div>
         <div className="flex-1 space-y-2.5">

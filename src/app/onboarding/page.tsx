@@ -1,12 +1,29 @@
 import React, { useState } from "react";
 import EcoBuddy from "../../components/EcoBuddy";
 import { Sparkles, ArrowRight, ArrowLeft, Leaf, Shield, Heart, Check } from "lucide-react";
-import { 
-  OnboardingWelcomeIllustration, 
-  OnboardingCommuteIllustration, 
-  OnboardingFoodIllustration, 
-  OnboardingEnergyIllustration 
-} from "../../components/GraphicAssets";
+import { motion, AnimatePresence } from "motion/react";
+import Image from "../../components/Image";
+
+const onboardingSteps = [
+  {
+    image: "/images/ecobuddy-happy.png",
+    imageTitle: "Welcome to CarbonMate 🌍",
+    heading: "Namaste! Ready to help Earth?",
+    description: "Track your daily pollution in 30 seconds"
+  },
+  {
+    image: "/images/ecobuddy-neutral.png", 
+    imageTitle: "Tell us about yourself 👤",
+    heading: "Set up your profile",
+    description: "We use this to give you personal tips"
+  },
+  {
+    image: "/illustrations/forest.png",
+    imageTitle: "Set your green goal 🎯",
+    heading: "How much do you want to reduce?",
+    description: "Even small changes make a big difference"
+  }
+];
 
 interface OnboardingPageProps {
   onCompleteOnboarding: (baselineAnswers: {
@@ -49,10 +66,10 @@ export default function OnboardingPage({ onCompleteOnboarding }: OnboardingPageP
           <Leaf className="w-6 h-6 animate-pulse" />
         </div>
         <h2 className="text-xl md:text-2xl font-black tracking-tight mt-1">
-          Welcome to CarbonMate!
+          {onboardingSteps[step - 1]?.heading || "Welcome to CarbonMate!"}
         </h2>
-        <p className="text-xs md:text-sm text-text-secondary max-w-sm mx-auto leading-relaxed">
-          I'm EcoBuddy, your friendly green assistant. Answer 3 quick questions to start!
+        <p className="text-xs md:text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
+          {onboardingSteps[step - 1]?.description || "Let's track and improve your carbon footprint."}
         </p>
       </div>
 
@@ -70,12 +87,32 @@ export default function OnboardingPage({ onCompleteOnboarding }: OnboardingPageP
         </div>
       </div>
 
-      {/* Embedded interactive custom graphic preview of EcoBuddy scenarios */}
+      {/* Embedded interactive custom graphic preview of EcoBuddy scenarios with transitions */}
       <div className="flex justify-center max-w-xs mx-auto py-2">
-        {step === 1 && <OnboardingCommuteIllustration />}
-        {step === 2 && <OnboardingFoodIllustration />}
-        {step === 3 && <OnboardingEnergyIllustration />}
-        {step !== 1 && step !== 2 && step !== 3 && <OnboardingWelcomeIllustration />}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, scale: 0.95, y: 5 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -5 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col items-center gap-1.5"
+          >
+            <div className="w-44 h-44 rounded-[24px] overflow-hidden border border-border-custom bg-bg-base relative shadow-md group">
+              <Image 
+                src={onboardingSteps[step - 1]?.image} 
+                alt={onboardingSteps[step - 1]?.imageTitle}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                width={176}
+                height={176}
+                priority={true}
+              />
+              <div className="absolute bottom-2 left-2 right-2 bg-slate-950/75 text-[9px] font-black text-white py-1 px-2 rounded-lg text-center backdrop-blur-xs">
+                {onboardingSteps[step - 1]?.imageTitle}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 text-left border-t border-border-custom pt-6">

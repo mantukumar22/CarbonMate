@@ -227,14 +227,14 @@ export function MilestoneBadge({ badge, onShowJoy }: { badge: BadgeItem; onShowJ
   return (
     <div 
       onClick={() => {
-        if (badge.unlocked && onShowJoy) {
+        if (onShowJoy) {
           onShowJoy();
         }
       }}
-      className={`relative p-3.5 rounded-2xl border flex items-center justify-between gap-3 transition-all duration-300 ${
+      className={`relative p-3.5 rounded-2xl border flex items-center justify-between gap-3 transition-all duration-300 cursor-pointer hover:scale-103 ${
         badge.unlocked 
-          ? `${colorMap[badge.theme]} hover:scale-103 cursor-pointer bg-bg-surface` 
-          : "bg-bg-surface/30 opacity-40 border-border-custom saturate-50 cursor-not-allowed"
+          ? `${colorMap[badge.theme]} bg-bg-surface` 
+          : "bg-bg-surface/30 opacity-60 border-border-custom saturate-50 hover:bg-bg-base/30"
       }`}
     >
       <div className="flex items-center gap-3">

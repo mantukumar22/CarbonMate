@@ -53,9 +53,11 @@ import { DIET_FACTORS, COMMUTE_FACTORS } from "./lib/emissionFactors";
 
 // Import custom application pages
 import OnboardingPage from "./app/onboarding/page";
+import ProfileTab from "./app/onboarding/ProfileTab";
 import DashboardPage from "./app/dashboard/page";
 import LogPage from "./app/log/page";
 import InsightsPage from "./app/insights/page";
+import { getUserDisplayName, getUserInitials } from "./lib/getUserDisplayName";
 
 // Import compliance components
 import AuthScreen from "./components/AuthScreen";
@@ -446,7 +448,15 @@ export default function App() {
     triggerToast("info", "Cookie storage declined. Only critical security tokens will be loaded.");
   };
 
+  const handleResetOnboarding = () => {
+    if (userProfile) {
+      setUserProfile({ ...userProfile, onboarded: false });
+    }
+  };
+
   const totalCo2Cumulative = entries.reduce((acc, cr) => acc + cr.estimated_co2_kg, 0);
+  const displayName = getUserDisplayName(user);
+  const initials = getUserInitials(displayName);
 
   // Authentication barrier Check
   if (!authReady) {
@@ -608,6 +618,17 @@ export default function App() {
             </span>
           )}
 
+          {user && (
+            <div className="flex items-center gap-2 border border-[#2C342B] bg-[#1B2119] px-2 py-1 rounded-xl shrink-0 animate-in fade-in duration-300" id="navbar-user-avatar">
+              <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-slate-950 text-xs font-black shrink-0">
+                {initials}
+              </div>
+              <span className="hidden md:block text-xs text-[#A8B8AA] font-bold max-w-[90px] truncate">
+                {displayName}
+              </span>
+            </div>
+          )}
+
           {/* Secure config menu */}
           <button 
             onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
@@ -680,7 +701,16 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-8 overflow-hidden flex flex-col" id="main-content-flow">
         <div className="flex-1 min-h-0">
           {activeTab === "onboarding" && (
-            <OnboardingPage onCompleteOnboarding={handleCompleteOnboarding} />
+            userProfile?.onboarded ? (
+              <ProfileTab
+                user={user}
+                userProfile={userProfile}
+                onResetOnboarding={handleResetOnboarding}
+                entriesCount={entries.length}
+              />
+            ) : (
+              <OnboardingPage onCompleteOnboarding={handleCompleteOnboarding} />
+            )
           )}
 
           {activeTab === "dashboard" && (
@@ -689,11 +719,12 @@ export default function App() {
               selectedEntry={selectedEntry}
               onSelectEntry={setSelectedEntry}
               onNavigateToTab={setActiveTab}
+              user={user}
             />
           )}
 
           {activeTab === "log" && (
-            <LogPage onAddEntry={handleAddEntry} entries={entries} />
+            <LogPage onAddEntry={handleAddEntry} entries={entries} user={user} />
           )}
 
           {activeTab === "insights" && (

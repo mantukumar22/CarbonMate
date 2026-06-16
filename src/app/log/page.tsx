@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import Image from "../../components/Image";
 import { DailyEntry } from "../../types";
+import { getUserDisplayName } from "../../lib/getUserDisplayName";
 import ChatLogger from "../../components/ChatLogger";
 import ManualLogger from "../../components/ManualLogger";
 import { Sparkles, HelpCircle, Check, Info } from "lucide-react";
@@ -9,11 +11,55 @@ import { motion, AnimatePresence } from "motion/react";
 interface LogPageProps {
   onAddEntry: (entry: DailyEntry) => void;
   entries: DailyEntry[];
+  user?: any;
 }
 
-export default function LogPage({ onAddEntry, entries }: LogPageProps) {
+export default function LogPage({ onAddEntry, entries, user }: LogPageProps) {
   const [activeSubTab, setActiveSubTab] = useState<"ai" | "manual">("ai");
   const [newEntryId, setNewEntryId] = useState<string | null>(null);
+  const [selectedModeId, setSelectedModeId] = useState<"car" | "auto" | "bus" | "bike">("car");
+  const [distanceKm, setDistanceKm] = useState<number>(50);
+
+  const transportModes = [
+    { 
+      id: "car" as const, 
+      label: "Car", 
+      emoji: "🚗",
+      image: "/illustrations/car.svg",
+      co2PerKm: 0.21,
+      color: "rose"
+    },
+    { 
+      id: "auto" as const, 
+      label: "Auto", 
+      emoji: "🛺",
+      image: "/illustrations/auto.svg",
+      co2PerKm: 0.13,
+      color: "amber"
+    },
+    { 
+      id: "bus" as const, 
+      label: "Bus", 
+      emoji: "🚌",
+      image: "/illustrations/bus.svg",
+      co2PerKm: 0.08,
+      color: "blue"
+    },
+    { 
+      id: "bike" as const, 
+      label: "Bike", 
+      emoji: "🚲",
+      image: "/illustrations/bike.svg",
+      co2PerKm: 0.00,
+      color: "emerald"
+    }
+  ];
+
+  const currentMode = transportModes.find(m => m.id === selectedModeId) || transportModes[0];
+  const co2Total = parseFloat((distanceKm * currentMode.co2PerKm).toFixed(2));
+  const treesRequired = parseFloat((co2Total / 21).toFixed(2));
+
+  const displayName = getUserDisplayName(user);
 
   // Wrap the entry completion to automatically track and highlight the newly added item
   const handleAddEntryWrapped = (newEntry: DailyEntry) => {
@@ -30,11 +76,11 @@ export default function LogPage({ onAddEntry, entries }: LogPageProps) {
     <div className="space-y-6" id="log-page-container">
       {/* Intro prompt */}
       <div className="bg-slate-900 border border-slate-800 shadow-lg rounded-2xl p-5 text-white">
-        <h2 className="text-lg font-black leading-snug text-white">
-          How do you want to calculate your pollution today?
+        <h2 className="text-xl md:text-2xl font-black font-sans leading-tight">
+          Hello, {displayName}! 📝
         </h2>
-        <p className="text-xs text-white mt-1 leading-relaxed opacity-90">
-          Type your day in simple English below, or write down the numbers yourself.
+        <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+          How do you want to calculate your pollution today? Type your day in simple English below, or write down the numbers yourself.
         </p>
 
         {/* Tab switcher */}
@@ -183,23 +229,87 @@ export default function LogPage({ onAddEntry, entries }: LogPageProps) {
           </div>
 
           {/* Transit Impact Visualizer Card */}
-          <div className="bg-[#1B2119] border border-[#2C342B] shadow-sm rounded-2xl p-4 overflow-hidden space-y-3">
+          <div className="bg-[#1B2119] border border-[#2C342B] shadow-sm rounded-2xl p-4 overflow-hidden space-y-4" id="transit-calculator-container">
             <h4 className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">
-              How Travel Affects Earth
+              Transit Impact Guide
             </h4>
-            <div className="rounded-2xl overflow-hidden border border-[#2C342B] aspect-video relative shadow-xs">
-              <img
-                src="/src/assets/images/impact_car_vs_bike_1781281921278.jpg"
-                alt="Car vs Bike Emission Comparison"
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
+
+            {/* Clickable transport modes */}
+            <div className="grid grid-cols-4 gap-2 pb-1 overflow-x-auto">
+              {transportModes.map((mode) => {
+                const isSelected = selectedModeId === mode.id;
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => setSelectedModeId(mode.id)}
+                    className={`p-2.5 rounded-xl border flex flex-col items-center text-center justify-between transition-all duration-300 cursor-pointer h-24 ${
+                      isSelected
+                        ? "bg-[#253022] border-brand-primary text-white scale-103 shadow-md"
+                        : "bg-[#161D15] border-[#2C342B] text-[#A8B8AA] hover:border-[#4B5E4A]"
+                    }`}
+                  >
+                    <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                      <Image
+                        src={mode.image}
+                        alt={mode.label}
+                        width={40}
+                        height={40}
+                        className={`w-full h-full object-contain transition-all ${
+                          isSelected ? "scale-110" : "opacity-80"
+                        }`}
+                      />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-black leading-none">{mode.emoji} {mode.label}</p>
+                      <p className="text-[8px] opacity-75 font-mono leading-none">{mode.co2PerKm.toFixed(2)} kg/km</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Travel Distance Input/Slider */}
+            <div className="space-y-1 pt-1 border-t border-[#2C342B]/40">
+              <div className="flex justify-between items-center text-[9px] font-black text-[#A8B8AA] uppercase tracking-wider">
+                <span>Journey Distance</span>
+                <span className="text-brand-primary font-black">{distanceKm} km</span>
+              </div>
+              <input 
+                type="range" 
+                min="5" 
+                max="100" 
+                step="5"
+                value={distanceKm} 
+                onChange={(e) => setDistanceKm(parseInt(e.target.value))}
+                className="w-full accent-emerald-500 h-1 bg-[#121714] rounded-lg appearance-none cursor-pointer border border-[#232B22]"
               />
             </div>
-            <div className="space-y-1">
-              <p className="text-xs font-bold text-[#E8F0E3]">Bicycle & Walking are Best!</p>
-              <p className="text-[10.5px] text-[#A8B8AA] leading-normal font-semibold">
-                Driving cars creates 0.21 kg of pollution per km. Walking or cycling saves 100% of this pollution!
-              </p>
+
+            {/* Smooth transition comparison results container */}
+            <div className="bg-[#121714] border border-[#232B22] p-3 rounded-xl min-h-[58px] flex items-center justify-center">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${selectedModeId}-${distanceKm}`}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                  className="w-full text-center space-y-1"
+                >
+                  <p className="text-xs font-bold text-[#E8F0E3]">
+                    {currentMode.emoji} {currentMode.label} ({distanceKm}km) &nbsp;=&nbsp;{" "}
+                    <span className="text-rose-400 font-extrabold">{co2Total} kg CO₂</span>
+                  </p>
+                  <p className="text-[10.5px] text-[#A8B8AA] leading-normal font-semibold">
+                    🌳 Equivalent: requires{" "}
+                    <span className="text-emerald-400 font-black">
+                      {treesRequired} trees
+                    </span>{" "}
+                    to absorb annually!
+                  </p>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </div>
