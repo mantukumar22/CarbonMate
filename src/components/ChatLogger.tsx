@@ -101,6 +101,15 @@ interface ChatLoggerProps {
   onSubmit?: (text: string) => void | Promise<any>;
 }
 
+const QUICK_SUGGESTIONS = [
+  "🛺 Auto to office 5km",
+  "🍱 Dal rice for lunch",
+  "❄️ AC used 3 hours",
+  "🚌 Bus to market 8km",
+  "🥩 Chicken curry dinner",
+  "💡 Electricity bill high today"
+] as const;
+
 export default function ChatLogger({ onExtractionComplete, onSubmit }: ChatLoggerProps) {
   const [text, setText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -193,6 +202,27 @@ export default function ChatLogger({ onExtractionComplete, onSubmit }: ChatLogge
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-3">
+                {/* Quick suggestions group */}
+                <div 
+                  className="flex gap-1.5 flex-wrap pb-1"
+                  role="group"
+                  aria-label="Quick activity suggestions"
+                >
+                  {QUICK_SUGGESTIONS.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => setText(prev => 
+                        prev ? `${prev}, ${suggestion}` : suggestion
+                      )}
+                      className="text-[10px] font-bold bg-[#121714] border border-[#2C342B] text-[#A8B8AA] hover:border-emerald-500 hover:text-emerald-400 px-2.5 py-1 rounded-full transition-all duration-200 cursor-pointer"
+                      aria-label={`Add suggestion: ${suggestion}`}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+
                 <label htmlFor="chat-input" className="sr-only">
                   Describe your day to EcoBuddy
                 </label>

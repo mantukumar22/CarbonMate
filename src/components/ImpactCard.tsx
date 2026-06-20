@@ -1,4 +1,5 @@
 import React from "react";
+import { CO2_PER_TREE_PER_YEAR } from "../constants/appConfig";
 
 interface ImpactCardProps {
   id?: string;
@@ -24,7 +25,7 @@ export function ImpactCard({
   description = "",
   co2,
   category,
-}: ImpactCardProps) {
+}: ImpactCardProps): React.JSX.Element {
   const finalCO2 = co2 !== undefined ? co2 : co2Contribution;
   const finalTitle = category !== undefined ? category : title;
   const finalValue = co2 !== undefined ? `${co2} kg` : value;
@@ -32,7 +33,7 @@ export function ImpactCard({
   const finalIcon = icon || "🌳";
   const finalColor = color;
 
-  const treesCount = finalCO2 / 21;
+  const treesCount = finalCO2 / CO2_PER_TREE_PER_YEAR;
 
   // Styles based on color
   let colorClasses = {

@@ -19,7 +19,7 @@ export default function Image({
   className,
   style,
   ...props
-}: ImageProps) {
+}: ImageProps): React.JSX.Element {
   // Return standard high-performance img element
   return (
     <img

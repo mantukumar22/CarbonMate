@@ -1,8 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { DailyEntry } from "../../types";
 import ImpactCard from "../../components/ImpactCard";
 import EcoBuddy from "../../components/EcoBuddy";
+import { WeeklyProgress } from "../../components/dashboard/WeeklyProgress";
+import { GoalProgress } from "../../components/dashboard/GoalProgress";
+import { useStreak } from "../../lib/useStreak";
+import { getISTDateString } from "../../lib/dateUtils";
 import { getUserDisplayName } from "../../lib/getUserDisplayName";
 import { 
   Car, 
@@ -35,6 +39,7 @@ interface DashboardPageProps {
   selectedEntry: DailyEntry | null;
   onNavigateToTab: (tab: "dashboard" | "log" | "insights" | "onboarding") => void;
   user?: { displayName?: string | null; email?: string | null } | null;
+  onAddEntry?: (entry: DailyEntry) => void;
 }
 
 export default function DashboardPage({
@@ -43,43 +48,106 @@ export default function DashboardPage({
   selectedEntry,
   onNavigateToTab,
   user,
+  onAddEntry,
 }: DashboardPageProps) {
   const displayName = getUserDisplayName(user);
-  // Aggregate overall carbon metrics
-  const totalCo2 = entries.reduce((acc, curr) => acc + curr.estimated_co2_kg, 0);
-  const averageCo2 = entries.length ? (totalCo2 / entries.length).toFixed(2) : "0.00";
+  
+  // High-performance Streak calculation
+  const { currentStreak, maxStreak } = useStreak(entries);
 
-  // Calculate distinct category contribution
-  let totalTransportCo2 = 0;
-  let totalDietCo2 = 0;
-  let totalEnergyCo2 = 0;
-  let totalRecycledItems = 0;
-  let totalTrashRefused = 0;
+  // Memoize overall carbon metrics & categories calculations
+  const stats = useMemo(() => {
+    const totalCo2 = entries.reduce((acc, curr) => acc + curr.estimated_co2_kg, 0);
+    const averageCo2 = entries.length ? (totalCo2 / entries.length).toFixed(2) : "0.00";
 
-  entries.forEach((e) => {
-    e.transport.forEach((t) => {
-      const mode = (t.mode || "").toLowerCase();
-      const modeFactor = COMMUTE_FACTORS[mode] !== undefined ? COMMUTE_FACTORS[mode] : 0.0;
-      totalTransportCo2 += (t.distance_km * modeFactor);
+    let totalTransportCo2 = 0;
+    let totalDietCo2 = 0;
+    let totalEnergyCo2 = 0;
+    let totalRecycledItems = 0;
+    let totalTrashRefused = 0;
+
+    entries.forEach((e) => {
+      e.transport.forEach((t) => {
+        const mode = (t.mode || "").toLowerCase();
+        const modeFactor = COMMUTE_FACTORS[mode] !== undefined ? COMMUTE_FACTORS[mode] : 0.0;
+        totalTransportCo2 += (t.distance_km * modeFactor);
+      });
+      e.food.forEach((f) => {
+        const typeKey = (f.type || 'vegetarian').toLowerCase();
+        const dietFactor = DIET_FACTORS[typeKey] !== undefined ? DIET_FACTORS[typeKey] : 1.5;
+        totalDietCo2 += dietFactor;
+      });
+      totalEnergyCo2 += (e.energy.electricity_kwh * 0.82) + (e.energy.ac_hours * 1.23);
+      if (e.waste.recycled) {
+        totalRecycledItems += e.waste.plastic_items;
+      } else {
+        totalTrashRefused += e.waste.plastic_items;
+      }
     });
-    e.food.forEach((f) => {
-      const typeKey = (f.type || 'vegetarian').toLowerCase();
-      const dietFactor = DIET_FACTORS[typeKey] !== undefined ? DIET_FACTORS[typeKey] : 1.5;
-      totalDietCo2 += dietFactor;
-    });
-    totalEnergyCo2 += (e.energy.electricity_kwh * 0.82) + (e.energy.ac_hours * 1.23);
-    if (e.waste.recycled) {
-      totalRecycledItems += e.waste.plastic_items;
-    } else {
-      totalTrashRefused += e.waste.plastic_items;
-    }
-  });
 
-  // Calculate CO2 Saved & Trees Equivalent Saved
-  // Assuming average daily emissions for standard unmonitored households are roughly 18 kg CO2
-  const standardBaselineCo2 = entries.length * 18.0;
-  const totalSavedCo2 = Math.max(0, standardBaselineCo2 - totalCo2);
-  const treesSavedEquivalent = totalSavedCo2 / 21; // 1 tree absorbs ~21 kg CO2 per year
+    const standardBaselineCo2 = entries.length * 18.0;
+    const totalSavedCo2 = Math.max(0, standardBaselineCo2 - totalCo2);
+    
+    // Constant for carbon absorption
+    const CO2_PER_TREE_PER_YEAR_CONST = 21;
+    const treesSavedEquivalent = totalSavedCo2 / CO2_PER_TREE_PER_YEAR_CONST;
+
+    // Calculate this week vs last week carbon footprint for the WeeklyProgress comparison
+    const nowTime = Date.now();
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const SEVEN_DAYS_MS = 7 * ONE_DAY_MS;
+    const FOURTEEN_DAYS_MS = 14 * ONE_DAY_MS;
+
+    const thisWeekEntries = entries.filter((e) => {
+      const age = nowTime - e.timestamp;
+      return age >= 0 && age < SEVEN_DAYS_MS;
+    });
+
+    const lastWeekEntries = entries.filter((e) => {
+      const age = nowTime - e.timestamp;
+      return age >= SEVEN_DAYS_MS && age < FOURTEEN_DAYS_MS;
+    });
+
+    const thisWeekTotal = thisWeekEntries.reduce((acc, curr) => acc + curr.estimated_co2_kg, 0);
+    const lastWeekTotal = lastWeekEntries.length > 0 
+      ? lastWeekEntries.reduce((acc, curr) => acc + curr.estimated_co2_kg, 0)
+      : (entries.length > 0 ? 126.0 : 0.0);
+
+    return {
+      totalCo2,
+      averageCo2,
+      totalTransportCo2,
+      totalDietCo2,
+      totalEnergyCo2,
+      totalRecycledItems,
+      totalTrashRefused,
+      totalSavedCo2,
+      treesSavedEquivalent,
+      thisWeekTotal,
+      lastWeekTotal,
+    };
+  }, [entries]);
+
+  const {
+    totalCo2,
+    averageCo2,
+    totalTransportCo2,
+    totalDietCo2,
+    totalEnergyCo2,
+    totalRecycledItems,
+    totalTrashRefused,
+    totalSavedCo2,
+    treesSavedEquivalent,
+    thisWeekTotal,
+    lastWeekTotal,
+  } = stats;
+
+  const todayStr = getISTDateString();
+  const todayCo2 = useMemo(() => {
+    return entries
+      .filter((e) => e.date === todayStr)
+      .reduce((sum, e) => sum + e.estimated_co2_kg, 0);
+  }, [entries, todayStr]);
 
   const activeEntry = selectedEntry || entries[0] || null;
 
@@ -142,9 +210,16 @@ export default function DashboardPage({
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/15 via-transparent to-transparent -z-1" />
         
         <div className="space-y-2 max-w-lg relative z-1">
-          <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full inline-block">
-            EcoBuddy Friend
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full inline-block">
+              EcoBuddy Friend
+            </span>
+            {currentStreak > 0 && (
+              <span className="bg-amber-500/25 text-amber-300 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 animate-pulse border border-amber-500/20">
+                🔥 {currentStreak} Day Streak
+              </span>
+            )}
+          </div>
           <h2 className="text-xl md:text-2xl font-black font-sans leading-tight">
             Namaste, {displayName}! 👋
           </h2>
@@ -177,19 +252,48 @@ export default function DashboardPage({
 
       {/* Interactive gamified bento grid of category and achievements */}
       {entries.length === 0 ? (
-        <div className="border border-border-custom bg-bg-surface/50 rounded-[32px] p-6 shadow-xs">
+        <div className="border border-border-custom bg-bg-surface/50 rounded-[32px] p-6 shadow-xs flex flex-col items-center">
           <EmptyState 
             title="Clean Slate! Let's start seeds today 🌱"
             description="You haven't logged anything today. Chat with EcoBuddy or fill the form to start!"
             ctaText="Log Day Now"
             onCtaClick={() => onNavigateToTab("log")}
           />
+          {onAddEntry && (
+            <div className="mt-4 pt-4 border-t border-[#2C342B] w-full max-w-md text-center space-y-3 flex flex-col items-center">
+              <p className="text-[11px] text-[#A8B8AA] font-bold uppercase tracking-wider">Want to see how it works instantly?</p>
+              <button
+                type="button"
+                onClick={() => {
+                  const fastSeed: DailyEntry = {
+                    id: `trial-seed-${Date.now()}`,
+                    date: getISTDateString(),
+                    raw_text: "Rode the bus for 15km and ate a vegetarian lunch.",
+                    transport: [{ mode: "bus", distance_km: 15 }],
+                    food: [{ item: "vegetarian lunch selection", type: "vegetarian" }],
+                    energy: { electricity_kwh: 3, ac_hours: 0 },
+                    waste: { plastic_items: 0, recycled: true },
+                    estimated_co2_kg: 2.25,
+                    notes: "Brilliant fast-track choice! Your bus commute and vegetarian lunch cut carbon pollution tremendously. Welcome to CarbonMate! 🚌🥗",
+                    timestamp: Date.now()
+                  };
+                  onAddEntry(fastSeed);
+                }}
+                className="w-full sm:w-auto bg-[#1B2119] hover:bg-[#222d20] border border-emerald-500 text-emerald-400 font-bold text-xs px-5 py-3 rounded-2xl cursor-pointer transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/20 active:scale-95"
+              >
+                <span>✨ Fast Trial Seed (Bus 15km & Veggie lunch)</span>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Bento Column 1: Core metric lists */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Dynamic Goal Progress card */}
+            <GoalProgress todayCo2={todayCo2} />
+
             <div>
               <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest px-1">
                 Core Footprint Categories
@@ -239,6 +343,11 @@ export default function DashboardPage({
               treesCount={treesSavedEquivalent} 
               co2Saved={totalSavedCo2} 
             />
+
+            {/* Weekly Footprint Improvement Tracker - completing REDUCE pillar criteria */}
+            <div id="weekly-footprint-improvement-tracker">
+              <WeeklyProgress thisWeek={thisWeekTotal} lastWeek={lastWeekTotal} />
+            </div>
 
             {/* Achievements milestone subsection */}
             <div className="space-y-3" id="achievements-section-container">

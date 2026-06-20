@@ -5,7 +5,7 @@ interface PrivacyTermsProps {
   onClose: () => void;
 }
 
-export default function PrivacyTerms({ onClose }: PrivacyTermsProps) {
+export default function PrivacyTerms({ onClose }: PrivacyTermsProps): React.JSX.Element {
   const modalRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     modalRef.current?.focus();

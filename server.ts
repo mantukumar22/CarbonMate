@@ -3,6 +3,16 @@ import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
+import cors from "cors";
+import { randomUUID } from "crypto";
+
+declare global {
+  namespace Express {
+    interface Request {
+      id?: string;
+    }
+  }
+}
 
 dotenv.config();
 
@@ -13,6 +23,29 @@ if (!process.env.GEMINI_API_KEY) {
 
 const app = express();
 const PORT = 3000;
+
+// CORS configuration matching security audit constraints
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://carbonmate.vercel.app",
+    process.env.FRONTEND_URL || ""
+  ].filter(Boolean),
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  maxAge: 86400
+};
+
+app.use(cors(corsOptions));
+
+// Assign X-Request-Id for distributed tracing and performance auditing
+app.use((req, res, next) => {
+  req.id = randomUUID();
+  res.setHeader("X-Request-Id", req.id);
+  next();
+});
 
 // Security Headers Middleware: Protects against XSS, clickjacking, sniff attacks, and frame nesting
 app.use((req, res, next) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import {
   Leaf,
   Plus,
@@ -43,7 +43,8 @@ import {
   saveUserProfile, 
   auth,
   isMockFirebase,
-  UserProfile
+  UserProfile,
+  withRetry
 } from "./lib/firebase";
 import { fetchPersonalizedTips } from "./lib/gemini";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -51,12 +52,12 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 // Base Seeds
 import { DIET_FACTORS, COMMUTE_FACTORS } from "./lib/emissionFactors";
 
-// Import custom application pages
-import OnboardingPage from "./app/onboarding/page";
+// Import custom application pages lazy loaded for instant initial parsing and load speeds
+const OnboardingPage = lazy(() => import("./app/onboarding/page"));
 import ProfileTab from "./app/onboarding/ProfileTab";
-import DashboardPage from "./app/dashboard/page";
-import LogPage from "./app/log/page";
-import InsightsPage from "./app/insights/page";
+const DashboardPage = lazy(() => import("./app/dashboard/page"));
+const LogPage = lazy(() => import("./app/log/page"));
+const InsightsPage = lazy(() => import("./app/insights/page"));
 import { getUserDisplayName, getUserInitials } from "./lib/getUserDisplayName";
 
 // Import compliance components
@@ -354,14 +355,35 @@ export default function App() {
   const handleAddEntry = async (newEntry: DailyEntry) => {
     // Add active logged user ID
     const boundEntry = { ...newEntry, userId: user?.uid || "mock-uid-123" };
+    
+    // Duplicate log prevention (Robustness: check date and exact activity text match)
+    const isDuplicate = entries.some(
+      (e) => e.date === boundEntry.date && e.raw_text.trim().toLowerCase() === boundEntry.raw_text.trim().toLowerCase()
+    );
+    if (isDuplicate) {
+      triggerToast("info", "You already logged this exact carbon choice! 📝");
+      return;
+    }
+
+    // Set immediately in state (Optimistic Update pattern)
     setEntries((prev) => [boundEntry, ...prev]);
     setSelectedEntry(boundEntry);
     
     try {
-      await saveFirestoreEntry(user?.uid || "mock-uid-123", boundEntry);
+      // Execute save request using exponential retry backoff
+      await withRetry(
+        () => saveFirestoreEntry(user?.uid || "mock-uid-123", boundEntry),
+        3,
+        500
+      );
       triggerToast("success", "Eco footprint journal logged successfully! 🚀");
     } catch (err: any) {
-      triggerToast("error", "Saved locally. Click the email verification link to enable cloud backup!");
+      // If saving fails completely across all retries, revert the local entry
+      setEntries((prev) => prev.filter((e) => e.id !== boundEntry.id));
+      if (selectedEntry?.id === boundEntry.id) {
+        setSelectedEntry(null);
+      }
+      triggerToast("error", "Failed to sync log online. Reverted change from timeline. ❌");
     }
   };
 
@@ -631,14 +653,14 @@ export default function App() {
               <span className="hidden sm:inline">Connected</span>
             </span>
           ) : (
-            <span className="text-[10px] sm:text-xs font-bold text-amber-800 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/80 border border-amber-250 dark:border-amber-800 px-1.5 py-1 rounded-full flex items-center gap-1 shadow-xs shrink-0">
-              <span className="relative flex h-1.5 w-1.5 shrink-0">
-                <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
-              </span>
-              <WifiOff className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden sm:inline">Offline Syncing</span>
-            </span>
+            <div 
+              className="text-[10px] sm:text-xs font-bold text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-950/80 border border-yellow-250 dark:border-yellow-800 px-2 py-1 rounded-full flex items-center gap-1.5 shadow-xs shrink-0"
+              role="status"
+              aria-live="polite"
+            >
+              <span aria-hidden="true" className="animate-pulse">⚡</span>
+              <span>Offline — logs saved locally</span>
+            </div>
           )}
 
           {user && (
@@ -728,41 +750,49 @@ export default function App() {
         className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-8 overflow-hidden flex flex-col focus:outline-none"
       >
         <div className="flex-1 min-h-0">
-          {activeTab === "onboarding" && (
-            userProfile?.onboarded ? (
-              <ProfileTab
+          <Suspense fallback={
+            <div className="flex-1 flex flex-col items-center justify-center p-12 min-h-[300px] text-emerald-400">
+              <BrandedLoader />
+              <span className="text-xs font-bold uppercase tracking-widest mt-4 animate-pulse">Analyzing footprint environment...</span>
+            </div>
+          }>
+            {activeTab === "onboarding" && (
+              userProfile?.onboarded ? (
+                <ProfileTab
+                  user={user}
+                  userProfile={userProfile}
+                  onResetOnboarding={handleResetOnboarding}
+                  entriesCount={entries.length}
+                />
+              ) : (
+                <OnboardingPage onCompleteOnboarding={handleCompleteOnboarding} />
+              )
+            )}
+
+            {activeTab === "dashboard" && (
+              <DashboardPage
+                entries={entries}
+                selectedEntry={selectedEntry}
+                onSelectEntry={setSelectedEntry}
+                onNavigateToTab={setActiveTab}
                 user={user}
-                userProfile={userProfile}
-                onResetOnboarding={handleResetOnboarding}
-                entriesCount={entries.length}
+                onAddEntry={handleAddEntry}
               />
-            ) : (
-              <OnboardingPage onCompleteOnboarding={handleCompleteOnboarding} />
-            )
-          )}
+            )}
 
-          {activeTab === "dashboard" && (
-            <DashboardPage
-              entries={entries}
-              selectedEntry={selectedEntry}
-              onSelectEntry={setSelectedEntry}
-              onNavigateToTab={setActiveTab}
-              user={user}
-            />
-          )}
+            {activeTab === "log" && (
+              <LogPage onAddEntry={handleAddEntry} entries={entries} user={user} />
+            )}
 
-          {activeTab === "log" && (
-            <LogPage onAddEntry={handleAddEntry} entries={entries} user={user} />
-          )}
-
-          {activeTab === "insights" && (
-            <InsightsPage
-              entries={entries}
-              tips={tips}
-              isGeneratingTips={isGeneratingTips}
-              onRefreshTips={refreshTips}
-            />
-          )}
+            {activeTab === "insights" && (
+              <InsightsPage
+                entries={entries}
+                tips={tips}
+                isGeneratingTips={isGeneratingTips}
+                onRefreshTips={refreshTips}
+              />
+            )}
+          </Suspense>
         </div>
       </main>
 

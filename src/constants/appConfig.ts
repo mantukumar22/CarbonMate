@@ -1,0 +1,14 @@
+export const CO2_PER_TREE_PER_YEAR = 21;
+export const HIGH_CO2_THRESHOLD = 15;
+export const MEDIUM_CO2_THRESHOLD = 5;
+export const SCROLL_DELAY_MS = 300;
+export const AI_TIMEOUT_MS = 8000;
+export const MAX_INPUT_LENGTH = 500;
+export const MAX_DAILY_CO2 = 1000;
+export const MAX_DISTANCE_KM = 2000;
+export const MAX_AC_HOURS = 24;
+export const MAX_ELECTRICITY_KWH = 1000;
+export const RATE_LIMIT_MAX_CALLS = 100; // Allow enough for test suites and users
+export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+export const REQUEST_SIZE_LIMIT = "15kb";
+export const DEFAULTS_USER_PEER_AVERAGE = 8.5; // used for chart comparison

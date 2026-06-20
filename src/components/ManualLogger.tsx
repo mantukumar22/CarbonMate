@@ -3,12 +3,19 @@ import { Plus, Trash2, CheckCircle, AlertCircle, Info, Loader2 } from "lucide-re
 import { DailyEntry, TransportItem, FoodItem, TransportMode, FoodType } from "../types";
 import { COMMUTE_FACTORS, DIET_FACTORS, calculateEntryCO2 } from "../lib/emissionFactors";
 import { getISTDateString } from "../lib/dateUtils";
+import {
+  MAX_DISTANCE_KM,
+  MAX_AC_HOURS,
+  MAX_ELECTRICITY_KWH,
+  HIGH_CO2_THRESHOLD,
+  MEDIUM_CO2_THRESHOLD
+} from "../constants/appConfig";
 
 interface ManualLoggerProps {
   onAddEntry: (entry: DailyEntry) => void;
 }
 
-export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
+export default function ManualLogger({ onAddEntry }: ManualLoggerProps): React.JSX.Element {
   const [date, setDate] = useState(() => getISTDateString());
   const [transports, setTransports] = useState<TransportItem[]>([]);
   const [foods, setFoods] = useState<FoodItem[]>([]);
@@ -29,26 +36,26 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
-  const addTransport = () => {
+  const addTransport = (): void => {
     setError(null);
     const dist = parseFloat(tempDistance);
     if (isNaN(dist) || dist <= 0) {
       setError("Please enter distance in km.");
       return;
     }
-    if (dist > 15000) {
-      setError("Please enter correct distance. 🌍");
+    if (dist > MAX_DISTANCE_KM) {
+      setError(`Please enter correct distance (max ${MAX_DISTANCE_KM}km). 🌍`);
       return;
     }
     setTransports([...transports, { mode: tempMode, distance_km: dist }]);
     setTempDistance("");
   };
 
-  const removeTransport = (index: number) => {
+  const removeTransport = (index: number): void => {
     setTransports(transports.filter((_, i) => i !== index));
   };
 
-  const addFood = () => {
+  const addFood = (): void => {
     setError(null);
     if (!tempFoodItem.trim()) {
       setError("Please write what you ate (for example, roti or rice).");
@@ -62,11 +69,11 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
     setTempFoodItem("");
   };
 
-  const removeFood = (index: number) => {
+  const removeFood = (index: number): void => {
     setFoods(foods.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
     setError(null);
 
@@ -80,13 +87,13 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
       return;
     }
 
-    if (acHours > 24) {
-      setError("AC used cannot be more than 24 hours.");
+    if (acHours > MAX_AC_HOURS) {
+      setError(`AC used cannot be more than ${MAX_AC_HOURS} hours.`);
       return;
     }
 
-    if (electricity > 500) {
-      setError("Electricity cannot be more than 500 units.");
+    if (electricity > MAX_ELECTRICITY_KWH) {
+      setError(`Electricity cannot be more than ${MAX_ELECTRICITY_KWH} units.`);
       return;
     }
 
@@ -121,9 +128,9 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
 
     // Generate dynamic eco encouragement note
     let encouragingNotes = "Saved! Every small step helps our Earth. Keep going! 🌱";
-    if (co2Sum < 5) {
+    if (co2Sum < MEDIUM_CO2_THRESHOLD) {
       encouragingNotes = "Saved! Every small step helps our Earth. Keep going! 🌱";
-    } else if (co2Sum > 25) {
+    } else if (co2Sum > HIGH_CO2_THRESHOLD) {
       encouragingNotes = "Saved! Let's eat more vegetarian food like dal rice tomorrow to go green. 🥦";
     }
 

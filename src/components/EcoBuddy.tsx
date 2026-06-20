@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "./Image";
 import { motion, AnimatePresence } from "motion/react";
+import { HIGH_CO2_THRESHOLD, MEDIUM_CO2_THRESHOLD } from "../constants/appConfig";
 
 interface EcoBuddyProps {
   co2Score?: number; // Current day's score to adjust facial expressions and color accents
@@ -9,7 +10,7 @@ interface EcoBuddyProps {
   isThinking?: boolean;
 }
 
-export default function EcoBuddy({ co2Score = 0, co2Today, className = "", isThinking = false }: EcoBuddyProps) {
+export default function EcoBuddy({ co2Score = 0, co2Today, className = "", isThinking = false }: EcoBuddyProps): React.JSX.Element {
   const finalCO2 = co2Today !== undefined ? co2Today : co2Score;
 
   // Determine happiness level based on footprint score
@@ -23,17 +24,17 @@ export default function EcoBuddy({ co2Score = 0, co2Today, className = "", isThi
     moodLabel = "EcoBuddy is so happy! Very clean day! 🎉";
     moodColor = "border-teal-200 bg-teal-50/80 text-teal-900 animate-pulse";
     characterColor = "#14b8a6"; // Teal-500
-  } else if (finalCO2 < 6) {
+  } else if (finalCO2 < MEDIUM_CO2_THRESHOLD) {
     mood = "happy";
     moodLabel = "EcoBuddy is smiling! Low pollution today. 😊";
     moodColor = "border-emerald-200 bg-emerald-50/75 text-emerald-800";
     characterColor = "#10b981"; // Emerald-500
-  } else if (finalCO2 < 15) {
+  } else if (finalCO2 < HIGH_CO2_THRESHOLD) {
     mood = "neutral";
     moodLabel = "EcoBuddy is smiling. Good progress today! 👍";
     moodColor = "border-blue-200 bg-blue-50/75 text-blue-800";
     characterColor = "#3b82f6"; // Blue-500
-  } else if (finalCO2 < 30) {
+  } else if (finalCO2 < (HIGH_CO2_THRESHOLD * 2)) {
     mood = "concerned";
     moodLabel = "EcoBuddy says: let's try to reduce pollution tomorrow!";
     moodColor = "border-amber-200 bg-amber-50/85 text-amber-900";
@@ -47,7 +48,7 @@ export default function EcoBuddy({ co2Score = 0, co2Today, className = "", isThi
 
 
   // Generate eye configurations dynamically
-  const renderEyes = () => {
+  const renderEyes = (): React.JSX.Element => {
     switch (mood) {
       case "ecstatic":
         return (
@@ -93,7 +94,7 @@ export default function EcoBuddy({ co2Score = 0, co2Today, className = "", isThi
     }
   };
 
-  const renderMouth = () => {
+  const renderMouth = (): React.JSX.Element => {
     switch (mood) {
       case "ecstatic":
         return (
@@ -119,20 +120,20 @@ export default function EcoBuddy({ co2Score = 0, co2Today, className = "", isThi
     }
   };
 
-  const getEcoBuddyMood = (co2Today: number) => {
-    if (co2Today === 0) return {
+  const getEcoBuddyMood = (co2Val: number) => {
+    if (co2Val === 0) return {
       image: "/images/ecobuddy-neutral.png",
       title: "Start logging to see EcoBuddy react!",
       message: "Tell me what you did today 🌿",
       alt: "EcoBuddy character waiting for daily log"
     };
-    if (co2Today < 5) return {
+    if (co2Val < MEDIUM_CO2_THRESHOLD) return {
       image: "/images/ecobuddy-happy.png",
       title: "EcoBuddy is Happy! 😄",
       message: "Amazing! Very low pollution today! EcoBuddy is smiling.",
       alt: "EcoBuddy character smiling happily"
     };
-    if (co2Today < 15) return {
+    if (co2Val < HIGH_CO2_THRESHOLD) return {
       image: "/images/ecobuddy-neutral.png",
       title: "EcoBuddy is Okay 😐",
       message: "Not bad! Try to reduce car use tomorrow",
@@ -147,7 +148,7 @@ export default function EcoBuddy({ co2Score = 0, co2Today, className = "", isThi
   };
 
   const moodData = getEcoBuddyMood(finalCO2);
-  const isHappy = finalCO2 < 15;
+  const isHappy = finalCO2 < HIGH_CO2_THRESHOLD;
 
   return (
     <div className={`p-4 rounded-3xl border text-center flex flex-col items-center gap-3.5 transition-all duration-300 ${moodColor} ${className}`} id="ecobuddy-animated-character">

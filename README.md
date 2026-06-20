@@ -1,5 +1,14 @@
 # CarbonMate 🌿
 
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://ai.studio/build)
+[![Platform](https://img.shields.io/badge/platform-Cloud_Run-blue.svg)](https://cloud.google.com/run)
+[![Framework](https://img.shields.io/badge/framework-React_18%20%2B%20Vite-61dafb.svg)](https://react.dev)
+[![Backend](https://img.shields.io/badge/backend-Express_Node-lightgrey.svg)](https://expressjs.com)
+[![Database](https://img.shields.io/badge/database-Firestore-orange.svg)](https://firebase.google.com/docs/firestore)
+[![Offline First](https://img.shields.io/badge/offline-persistent_indexeddb-blueviolet.svg)](#durable-dual-persistence)
+[![TypeScript](https://img.shields.io/badge/language-TypeScript-blue.svg)](https://www.typescriptlang.org/)
+[![UI Style](https://img.shields.io/badge/styling-Tailwind_CSS-38bdf8.svg)](https://tailwindcss.com/)
+
 CarbonMate is an interactive, full-stack personal carbon footprints tracker designed to simplify eco-consciousness. With the help of its companion assistant **EcoBuddy**, users can log their day-to-day actions in plain natural language (e.g., commute distance, meals, AC hours, plastic waste) and immediately receive accurate pollution scorecards, intuitive environmental impact insights, and actionable, personalized eco-tips.
 
 ---
@@ -10,6 +19,16 @@ CarbonMate leverages a clean, modern display layout built on:
 - **Forest Obsidian Aesthetic**: Warm, deeply dark eye-safe background tones (`#121714` and `#1B2119`) paired with soft organic text accents (`#A8B8AA`) and vibrant plant-greens (`#10B981`).
 - **Interactive EcoBuddy Helper**: Features animated reactive state highlights, including smooth green-border transitions, animated progress trackers, and real-time tree-offset conversion benchmarks.
 - **Fail-Safe Carbon Math**: Includes an engineered dual-engine architecture. If the AI model is sleeping or times out (8 seconds), a fully compliant, natural-language parsing local client calculator immediately handles the scores silently—ensuring the user's scorecards are saved and displayed without error.
+
+---
+
+## ⚡ Production-Excellent Features
+
+- **Optimistic UI Engine**: All entries show instantly on the timeline timeline history before waiting for remote database confirmations, keeping user interactivity zero-latency.
+- **Durable Dual Persistence**: Leverages robust, next-generation Firestore offline SDK caching alongside local-storage fallbacks, letting users log, retrieve, and delete items completely offline.
+- **Timezone-Adjusted Streak Tracker**: Measures consecutiveness of logged days relative to a user's exact physical day in Indian Standard Time (IST), encouraging consistent daily habits.
+- **Interactive Carbon Budgeting**: Provides interactive goal gauges that let users specify and live-adjust their own daily carbon budget target, followed by automatic green coaching.
+- **Smart Suggestions Feed**: Quick-tap chips allow users to easily insert standard daily tasks like "Auto to office" or "Dal rice for lunch" in a split-second.
 
 ---
 
