@@ -215,7 +215,7 @@ export interface BadgeItem {
   theme: "emerald" | "blue" | "amber" | "purple";
 }
 
-export function MilestoneBadge({ badge, onShowJoy }: { badge: BadgeItem; onShowJoy?: () => void; key?: any }) {
+export function MilestoneBadge({ badge, onShowJoy }: { badge: BadgeItem; onShowJoy?: () => void; key?: string }) {
   // Styles based on badge theme
   let colorMap = {
     emerald: "bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-500/20 shadow-emerald-500/5",

@@ -4,33 +4,36 @@ import { motion, AnimatePresence } from "motion/react";
 
 interface EcoBuddyProps {
   co2Score?: number; // Current day's score to adjust facial expressions and color accents
+  co2Today?: number; // Prop used by Vitest testing suites
   className?: string;
   isThinking?: boolean;
 }
 
-export default function EcoBuddy({ co2Score = 0, className = "", isThinking = false }: EcoBuddyProps) {
+export default function EcoBuddy({ co2Score = 0, co2Today, className = "", isThinking = false }: EcoBuddyProps) {
+  const finalCO2 = co2Today !== undefined ? co2Today : co2Score;
+
   // Determine happiness level based on footprint score
   let mood: "ecstatic" | "happy" | "neutral" | "concerned" | "supportive" = "happy";
   let moodLabel = "EcoBuddy is happy with you! 🌱";
   let moodColor = "border-emerald-200 bg-emerald-50/70 text-emerald-800";
   let characterColor = "#10b981"; // Emerald-500
 
-  if (co2Score === 0) {
+  if (finalCO2 === 0) {
     mood = "ecstatic";
     moodLabel = "EcoBuddy is so happy! Very clean day! 🎉";
     moodColor = "border-teal-200 bg-teal-50/80 text-teal-900 animate-pulse";
     characterColor = "#14b8a6"; // Teal-500
-  } else if (co2Score < 6) {
+  } else if (finalCO2 < 6) {
     mood = "happy";
     moodLabel = "EcoBuddy is smiling! Low pollution today. 😊";
     moodColor = "border-emerald-200 bg-emerald-50/75 text-emerald-800";
     characterColor = "#10b981"; // Emerald-500
-  } else if (co2Score < 15) {
+  } else if (finalCO2 < 15) {
     mood = "neutral";
     moodLabel = "EcoBuddy is smiling. Good progress today! 👍";
     moodColor = "border-blue-200 bg-blue-50/75 text-blue-800";
     characterColor = "#3b82f6"; // Blue-500
-  } else if (co2Score < 30) {
+  } else if (finalCO2 < 30) {
     mood = "concerned";
     moodLabel = "EcoBuddy says: let's try to reduce pollution tomorrow!";
     moodColor = "border-amber-200 bg-amber-50/85 text-amber-900";
@@ -41,6 +44,7 @@ export default function EcoBuddy({ co2Score = 0, className = "", isThinking = fa
     moodColor = "border-rose-100 bg-rose-50/85 text-rose-950";
     characterColor = "#f43f5e"; // Rose-500
   }
+
 
   // Generate eye configurations dynamically
   const renderEyes = () => {
@@ -119,27 +123,31 @@ export default function EcoBuddy({ co2Score = 0, className = "", isThinking = fa
     if (co2Today === 0) return {
       image: "/images/ecobuddy-neutral.png",
       title: "Start logging to see EcoBuddy react!",
-      message: "Tell me what you did today 🌿"
+      message: "Tell me what you did today 🌿",
+      alt: "EcoBuddy character waiting for daily log"
     };
     if (co2Today < 5) return {
       image: "/images/ecobuddy-happy.png",
       title: "EcoBuddy is Happy! 😄",
-      message: "Amazing! Very low pollution today!"
+      message: "Amazing! Very low pollution today! EcoBuddy is smiling.",
+      alt: "EcoBuddy character smiling happily"
     };
     if (co2Today < 15) return {
       image: "/images/ecobuddy-neutral.png",
       title: "EcoBuddy is Okay 😐",
-      message: "Not bad! Try to reduce car use tomorrow"
+      message: "Not bad! Try to reduce car use tomorrow",
+      alt: "EcoBuddy character looking neutral"
     };
     return {
       image: "/images/ecobuddy-sad.png",
       title: "EcoBuddy is Worried 😟",
-      message: "High pollution today. Try bus or auto tomorrow!"
+      message: "High pollution today! Try to reduce emissions by using bus or auto tomorrow!",
+      alt: "EcoBuddy character looking worried"
     };
   };
 
-  const moodData = getEcoBuddyMood(co2Score);
-  const isHappy = co2Score < 15;
+  const moodData = getEcoBuddyMood(finalCO2);
+  const isHappy = finalCO2 < 15;
 
   return (
     <div className={`p-4 rounded-3xl border text-center flex flex-col items-center gap-3.5 transition-all duration-300 ${moodColor} ${className}`} id="ecobuddy-animated-character">
@@ -156,7 +164,7 @@ export default function EcoBuddy({ co2Score = 0, className = "", isThinking = fa
           >
             <Image
               src={moodData.image}
-              alt={moodData.title}
+              alt={moodData.alt}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               width={250}
               height={250}
@@ -165,7 +173,7 @@ export default function EcoBuddy({ co2Score = 0, className = "", isThinking = fa
           </motion.div>
         </AnimatePresence>
         <div className="absolute top-2 left-2 bg-slate-950/80 backdrop-blur-xs text-[9px] font-black tracking-widest text-white px-2 py-0.5 rounded-full uppercase z-10">
-          {co2Score === 0 ? "📢 New" : isHappy ? "🌳 Green" : "⚠️ High"}
+          {finalCO2 === 0 ? "📢 New" : isHappy ? "🌳 Green" : "⚠️ High"}
         </div>
       </div>
 

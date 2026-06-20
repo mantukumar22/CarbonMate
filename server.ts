@@ -6,10 +6,29 @@ import { createServer as createViteServer } from "vite";
 
 dotenv.config();
 
+// Startup Environment Variable Validation
+if (!process.env.GEMINI_API_KEY) {
+  console.warn("⚠️ WARNING: GEMINI_API_KEY is not set in the process environment. EcoBuddy AI will operate securely in rule-based fallback mode.");
+}
+
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+// Security Headers Middleware: Protects against XSS, clickjacking, sniff attacks, and frame nesting
+app.use((req, res, next) => {
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self' https://*.firebaseio.com https://*.googleapis.com; img-src 'self' data: https: referrer; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; font-src 'self' data: https:; connect-src 'self' https: wss:;"
+  );
+  next();
+});
+
+// Limit inbound JSON payload size to 15kb to prevent heap exhaustion / buffer overruns
+app.use(express.json({ limit: "15kb" }));
 
 // IN-MEMORY RATE LIMITING: Prevents abuse and cost overruns on critical Gemini API requests
 const rateLimitStore: { [ip: string]: { count: number; resetTime: number } } = {};

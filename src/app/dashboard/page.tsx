@@ -34,7 +34,7 @@ interface DashboardPageProps {
   onSelectEntry: (entry: DailyEntry) => void;
   selectedEntry: DailyEntry | null;
   onNavigateToTab: (tab: "dashboard" | "log" | "insights" | "onboarding") => void;
-  user?: any;
+  user?: { displayName?: string | null; email?: string | null } | null;
 }
 
 export default function DashboardPage({

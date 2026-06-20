@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "motion/react";
 interface LogPageProps {
   onAddEntry: (entry: DailyEntry) => void;
   entries: DailyEntry[];
-  user?: any;
+  user?: { displayName?: string | null; email?: string | null } | null;
 }
 
 export default function LogPage({ onAddEntry, entries, user }: LogPageProps) {

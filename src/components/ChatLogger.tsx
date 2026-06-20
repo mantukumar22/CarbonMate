@@ -1,14 +1,24 @@
 import React, { useState, useRef } from "react";
 import { Send, Leaf, Sparkles, AlertCircle, Loader2, Car, Utensils, Zap, Trash2, TreeDeciduous } from "lucide-react";
-import { DailyEntry } from "../types";
+import { DailyEntry, TransportItem, FoodItem, TransportMode, FoodType } from "../types";
 import { extractDailyJournal } from "../lib/gemini";
 import { BrandedLoader } from "./GraphicAssets";
 import { COMMUTE_FACTORS, DIET_FACTORS } from "../lib/emissionFactors";
 import ImpactCard from "./ImpactCard";
 
-function localClientFallback(descText: string): any {
+interface FallbackOutput {
+  transport: TransportItem[];
+  food: FoodItem[];
+  energy: { electricity_kwh: number; ac_hours: number };
+  waste: { plastic_items: number; recycled: boolean };
+  estimated_co2_kg: number;
+  notes: string;
+  is_fallback: boolean;
+}
+
+function localClientFallback(descText: string): FallbackOutput {
   const desc = descText.toLowerCase();
-  const transport: any[] = [];
+  const transport: TransportItem[] = [];
   let estimated_co2_kg = 0;
   
   const distanceMatch = desc.match(/(\d+(?:\.\d+)?)\s*(?:km|kilometer|mile|mi)/i) || desc.match(/(\d+(?:\.\d+)?)\s*(?:\s|$)/);
@@ -30,7 +40,7 @@ function localClientFallback(descText: string): any {
     transport.push({ mode: "walk", distance_km: distance });
   }
 
-  const food: any[] = [];
+  const food: FoodItem[] = [];
   if (desc.includes("beef") || desc.includes("steak") || desc.includes("burger")) {
     food.push({ item: desc.includes("burger") ? "burger" : "beef selection", type: "beef" });
     estimated_co2_kg += 6.0;
@@ -86,11 +96,12 @@ function localClientFallback(descText: string): any {
 }
 
 interface ChatLoggerProps {
-  onExtractionComplete: (entry: DailyEntry) => void;
+  onExtractionComplete?: (entry: DailyEntry) => void;
   isLoading?: boolean;
+  onSubmit?: (text: string) => void | Promise<any>;
 }
 
-export default function ChatLogger({ onExtractionComplete }: ChatLoggerProps) {
+export default function ChatLogger({ onExtractionComplete, onSubmit }: ChatLoggerProps) {
   const [text, setText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +111,17 @@ export default function ChatLogger({ onExtractionComplete }: ChatLoggerProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() || isProcessing) return;
+
+    if (onSubmit) {
+      setError(null);
+      try {
+        await onSubmit(text);
+        setText("");
+      } catch (err: any) {
+        setError(err.message || "Failed to submit score");
+      }
+      return;
+    }
 
     setIsProcessing(true);
     setError(null);
@@ -128,7 +150,10 @@ export default function ChatLogger({ onExtractionComplete }: ChatLoggerProps) {
       };
 
       // Propagation starts database log creation
-      onExtractionComplete(newEntry);
+      if (onExtractionComplete) {
+        onExtractionComplete(newEntry);
+      }
+
       setScoreResult(newEntry);
       setText("");
       
@@ -168,13 +193,23 @@ export default function ChatLogger({ onExtractionComplete }: ChatLoggerProps) {
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-3">
+                <label htmlFor="chat-input" className="sr-only">
+                  Describe your day to EcoBuddy
+                </label>
                 <textarea
+                  id="chat-input"
+                  aria-label="Describe your day to EcoBuddy"
+                  aria-required="true"
+                  aria-describedby="chat-hint"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   placeholder="Example: Today I went to market by auto (3km), ate dal rice for lunch, and used AC for 2 hours at home."
                   className="w-full text-xs p-3.5 bg-[#121714] border border-[#2C342B] text-[#E8F0E3] placeholder:text-[#6B7F6A] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition-all font-sans"
                   rows={3}
                 />
+                <p id="chat-hint" className="sr-only">
+                  Type what you ate, how you travelled, and home energy use today
+                </p>
 
                 {error && (
                   <div className="p-2 text-[11px] bg-red-950/30 border border-red-900 text-red-300 rounded-lg flex items-center gap-1.5 animate-fadeIn">
@@ -187,6 +222,7 @@ export default function ChatLogger({ onExtractionComplete }: ChatLoggerProps) {
                   <span className="text-xs text-[#6B7F6A] font-semibold flex items-center gap-1">Connected ✓</span>
                   <button
                     type="submit"
+                    aria-label="Check My Score - Check my carbon footprint score"
                     disabled={isProcessing || !text.trim()}
                     className="bg-green-500 hover:bg-green-400 active:scale-95 text-black font-semibold rounded-xl px-6 py-3 shadow-md shadow-green-900/50 transition-all duration-200 cursor-pointer flex items-center gap-1.5 disabled:bg-slate-850 disabled:text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                   >

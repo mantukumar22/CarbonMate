@@ -32,7 +32,7 @@ import {
 import firebaseConfig from "../../firebase-applet-config.json";
 
 interface AuthScreenProps {
-  onAuthSuccess: (user: any) => void;
+  onAuthSuccess: (user: { uid: string; displayName?: string | null; email?: string | null; emailVerified?: boolean }) => void;
   onEnterDemoMode?: () => void;
   darkMode?: boolean;
   onToggleDarkMode?: () => void;
@@ -57,7 +57,7 @@ export default function AuthScreen({
   const [message, setMessage] = useState<{ type: "success" | "error"; text: React.ReactNode } | null>(null);
   
   // Pending user object for verification checking
-  const [pendingUser, setPendingUser] = useState<any>(null);
+  const [pendingUser, setPendingUser] = useState<{ uid: string; displayName?: string | null; email?: string | null; emailVerified?: boolean } | null>(null);
 
   // Auto-redirect if unverified on reload
   React.useEffect(() => {
@@ -71,7 +71,7 @@ export default function AuthScreen({
     }
   }, []);
 
-  const handleAuthError = (err: any) => {
+  const handleAuthError = (err: { message?: string; code?: string }) => {
     let readableMsg: React.ReactNode = err?.message || "Oops, something went wrong. Please try again!";
     
     if (err?.code === "auth/invalid-credential") {
@@ -366,10 +366,11 @@ export default function AuthScreen({
       {mode === "login" && (
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block">Email Address</label>
+            <label htmlFor="auth-login-email" className="text-[10px] font-black uppercase tracking-wider text-text-secondary block">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-3.5 w-4 h-4 text-text-secondary" />
               <input 
+                id="auth-login-email"
                 type="email" 
                 placeholder="you@example.com" 
                 value={email}
@@ -382,7 +383,7 @@ export default function AuthScreen({
 
           <div className="space-y-1">
             <div className="flex justify-between items-center">
-              <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block">Password</label>
+              <label htmlFor="auth-login-password" className="text-[10px] font-black uppercase tracking-wider text-text-secondary block">Password</label>
               <button 
                 type="button" 
                 onClick={() => setMode("forgot")}
@@ -394,6 +395,7 @@ export default function AuthScreen({
             <div className="relative">
               <Lock className="absolute left-3 top-3.5 w-4 h-4 text-text-secondary" />
               <input 
+                id="auth-login-password"
                 type={showPassword ? "text" : "password"} 
                 placeholder="••••••" 
                 value={password}
@@ -403,6 +405,7 @@ export default function AuthScreen({
               />
               <button 
                 type="button" 
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-3.5 text-text-secondary hover:text-text-primary cursor-pointer"
               >
@@ -426,10 +429,11 @@ export default function AuthScreen({
       {mode === "signup" && (
         <form onSubmit={handleSignUp} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block">Display Name</label>
+            <label htmlFor="auth-signup-name" className="text-[10px] font-black uppercase tracking-wider text-text-secondary block">Display Name</label>
             <div className="relative">
               <User className="absolute left-3 top-3.5 w-4 h-4 text-text-secondary" />
               <input 
+                id="auth-signup-name"
                 type="text" 
                 placeholder="Your Name" 
                 value={name}
@@ -441,10 +445,11 @@ export default function AuthScreen({
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block">Email Address</label>
+            <label htmlFor="auth-signup-email" className="text-[10px] font-black uppercase tracking-wider text-text-secondary block">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-3.5 w-4 h-4 text-text-secondary" />
               <input 
+                id="auth-signup-email"
                 type="email" 
                 placeholder="you@example.com" 
                 value={email}
@@ -456,10 +461,11 @@ export default function AuthScreen({
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block">Secret Password</label>
+            <label htmlFor="auth-signup-password" className="text-[10px] font-black uppercase tracking-wider text-text-secondary block">Secret Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-3.5 w-4 h-4 text-text-secondary" />
               <input 
+                id="auth-signup-password"
                 type={showPassword ? "text" : "password"} 
                 placeholder="6 or more characters" 
                 value={password}
@@ -469,6 +475,7 @@ export default function AuthScreen({
               />
               <button 
                 type="button" 
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-3.5 text-text-secondary hover:text-text-primary cursor-pointer"
               >

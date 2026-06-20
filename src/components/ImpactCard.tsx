@@ -2,25 +2,38 @@ import React from "react";
 
 interface ImpactCardProps {
   id?: string;
-  title: string;
-  value: string | number;
+  title?: string;
+  value?: string | number;
   unit?: string;
-  icon: string | React.ReactNode;
-  color: "emerald" | "blue" | "teal" | "amber" | "rose" | "slate";
+  icon?: string | React.ReactNode;
+  color?: "emerald" | "blue" | "teal" | "amber" | "rose" | "slate";
   co2Contribution?: number;
   description?: string;
+  co2?: number;
+  category?: string;
 }
 
-export default function ImpactCard({
+export function ImpactCard({
   id = "",
-  title,
-  value,
+  title = "",
+  value = "",
   unit = "",
   icon,
-  color,
+  color = "emerald",
   co2Contribution = 0,
   description = "",
+  co2,
+  category,
 }: ImpactCardProps) {
+  const finalCO2 = co2 !== undefined ? co2 : co2Contribution;
+  const finalTitle = category !== undefined ? category : title;
+  const finalValue = co2 !== undefined ? `${co2} kg` : value;
+  const finalUnit = co2 !== undefined ? "" : unit;
+  const finalIcon = icon || "🌳";
+  const finalColor = color;
+
+  const treesCount = finalCO2 / 21;
+
   // Styles based on color
   let colorClasses = {
     bg: "bg-[#1B2119] border-[#2C342B]",
@@ -29,7 +42,7 @@ export default function ImpactCard({
     barColor: "bg-emerald-500",
   };
 
-  switch (color) {
+  switch (finalColor) {
     case "emerald":
       colorClasses = {
         bg: "bg-[#1B2119] border-[#2C342B]",
@@ -89,22 +102,27 @@ export default function ImpactCard({
       <div className="flex items-start justify-between">
         <div className="flex flex-col">
           <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">
-            {title}
+            {finalTitle}
           </span>
           <p className="text-xl font-extrabold mt-1">
-            {value} <span className="text-xs font-semibold text-text-secondary">{unit}</span>
+            {finalValue} <span className="text-xs font-semibold text-text-secondary">{finalUnit}</span>
           </p>
         </div>
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${colorClasses.iconBg}`}>
-          {typeof icon === "string" ? <span className="text-sm">{icon}</span> : icon}
+          {typeof finalIcon === "string" ? <span className="text-sm">{finalIcon}</span> : finalIcon}
         </div>
+      </div>
+
+      {/* Cumulative tree equivalences info in small font for Accessibility audit */}
+      <div className="mt-2 text-[11px] font-bold text-brand-primary">
+        🌳 Equivalent to absorption of {treesCount.toFixed(1)} trees per year.
       </div>
 
       {/* Progress slider indicator if carbon exists */}
       <div className="mt-3 pt-2 border-t border-border-custom">
         <div className="flex items-center justify-between text-[10px] font-bold mb-1 text-text-secondary pb-0.5">
           <span>Daily Pollution</span>
-          <span className="text-text-primary">{co2Contribution.toFixed(1)} kg pollution (CO2)</span>
+          <span className="text-text-primary">{finalCO2.toFixed(1)} kg pollution (CO2)</span>
         </div>
         
         {description && (
@@ -114,10 +132,13 @@ export default function ImpactCard({
         <div className="w-full h-1 bg-bg-base rounded-full overflow-hidden border border-border-custom">
           <div
             className={`h-full ${colorClasses.barColor}`}
-            style={{ width: `${Math.min((co2Contribution / 30) * 100, 100)}%` }}
+            style={{ width: `${Math.min((finalCO2 / 30) * 100, 100)}%` }}
           />
         </div>
       </div>
     </div>
   );
 }
+
+export default ImpactCard;
+

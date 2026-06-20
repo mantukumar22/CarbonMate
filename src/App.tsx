@@ -144,6 +144,18 @@ export default function App() {
   // Network Connection Status
   const [online, setOnline] = useState(navigator.onLine);
 
+  // Escape closes any open modal/dropdown
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowSettingsDropdown(false);
+        setShowPrivacy(false);
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, []);
+
   // Setup event listeners for online state
   useEffect(() => {
     const handleOnline = () => {
@@ -486,6 +498,16 @@ export default function App() {
       className="min-h-screen bg-bg-base text-text-primary flex flex-col font-sans transition-colors duration-250" 
       id="global-application-glass-container"
     >
+      <a 
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed 
+                   focus:top-4 focus:left-4 focus:z-[9999]
+                   focus:bg-emerald-500 focus:text-black 
+                   focus:font-bold focus:px-4 focus:py-2 
+                   focus:rounded-lg focus:shadow-xl focus:border focus:border-emerald-600"
+      >
+        Skip to main content
+      </a>
       
       {/* Toast Overlay Container */}
       <div className="fixed top-5 right-5 z-50 space-y-2 pointer-events-none max-w-sm w-full" id="global-toasts-container">
@@ -517,6 +539,7 @@ export default function App() {
           </div>
           <button 
             onClick={() => setShowTooltip(false)}
+            aria-label="Close tooltip notification"
             className="w-5 h-5 rounded-full hover:bg-white/20 flex items-center justify-center text-white cursor-pointer"
           >
             <X className="w-3 h-3" />
@@ -632,6 +655,7 @@ export default function App() {
           {/* Secure config menu */}
           <button 
             onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+            aria-label="Open settings menu"
             className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl transition cursor-pointer shrink-0 flex items-center justify-center ${
               showSettingsDropdown ? "bg-emerald-600 text-white" : "bg-[#1B2119] text-emerald-400 hover:bg-[#222d20] border border-[#2C342B]"
             }`}
@@ -698,7 +722,11 @@ export default function App() {
       </header>
 
       {/* Main Container Core */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-8 overflow-hidden flex flex-col" id="main-content-flow">
+      <main 
+        id="main-content"
+        tabIndex={-1}
+        className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-8 overflow-hidden flex flex-col focus:outline-none"
+      >
         <div className="flex-1 min-h-0">
           {activeTab === "onboarding" && (
             userProfile?.onboarded ? (

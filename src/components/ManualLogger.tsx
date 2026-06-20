@@ -169,7 +169,9 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
         <h3 className="text-sm font-bold text-[#E8F0E3] flex items-center gap-2">
           🔨 Fill it Yourself
         </h3>
+        <label htmlFor="manual-date-input" className="sr-only">Select activity log date</label>
         <input
+          id="manual-date-input"
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
@@ -198,21 +200,29 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
         </span>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-          <select
-            value={tempMode}
-            onChange={(e) => setTempMode(e.target.value as TransportMode)}
-            className="w-full bg-[#1B2119] text-[#E8F0E3] text-xs font-semibold p-2.5 border border-[#2C342B] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none"
-          >
-            <option value="car" className="bg-[#1B2119] text-[#E8F0E3]">🚗 Car</option>
-            <option value="bus" className="bg-[#1B2119] text-[#E8F0E3]">🚌 Bus</option>
-            <option value="bike" className="bg-[#1B2119] text-[#E8F0E3]">🚲 Bicycle</option>
-            <option value="walk" className="bg-[#1B2119] text-[#E8F0E3]">🚶 Walk</option>
-            <option value="flight" className="bg-[#1B2119] text-[#E8F0E3]">✈️ Flight</option>
-          </select>
+          <div>
+            <label htmlFor="manual-transport-select" className="sr-only">Select transport mode</label>
+            <select
+              id="manual-transport-select"
+              aria-label="Select transport mode"
+              value={tempMode}
+              onChange={(e) => setTempMode(e.target.value as TransportMode)}
+              className="w-full bg-[#1B2119] text-[#E8F0E3] text-xs font-semibold p-2.5 border border-[#2C342B] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none"
+            >
+              <option value="car" className="bg-[#1B2119] text-[#E8F0E3]">🚗 Car</option>
+              <option value="bus" className="bg-[#1B2119] text-[#E8F0E3]">🚌 Bus</option>
+              <option value="bike" className="bg-[#1B2119] text-[#E8F0E3]">🚲 Bicycle</option>
+              <option value="walk" className="bg-[#1B2119] text-[#E8F0E3]">🚶 Walk</option>
+              <option value="flight" className="bg-[#1B2119] text-[#E8F0E3]">✈️ Flight</option>
+            </select>
+          </div>
 
           <div className="flex flex-col w-full">
             <div className="flex gap-2 w-full">
+              <label htmlFor="manual-distance-input" className="sr-only">Distance travelled in kilometers</label>
               <input
+                id="manual-distance-input"
+                aria-label="Distance in kilometers"
                 type="number"
                 placeholder="Distance (km)"
                 value={tempDistance}
@@ -226,6 +236,7 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
               <button
                 type="button"
                 onClick={addTransport}
+                aria-label="Add transport segment"
                 className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold px-4 py-2.5 rounded-xl text-xs transition duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0 hover:scale-[1.02] active:scale-[0.97]"
                 disabled={!tempDistance || parseFloat(tempDistance) <= 0 || isNaN(parseFloat(tempDistance))}
               >
@@ -245,7 +256,7 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
             {transports.map((t, idx) => (
               <span key={idx} className="bg-emerald-950/60 text-[10px] text-emerald-450 border border-emerald-900 font-bold px-2 py-1 rounded-lg flex items-center gap-1">
                 <span className="capitalize">{t.mode}</span> ({t.distance_km}km)
-                <button type="button" onClick={() => removeTransport(idx)} className="text-red-400 hover:text-red-500 ml-1 font-extrabold cursor-pointer">×</button>
+                <button type="button" aria-label={`Remove transport item ${t.mode}`} onClick={() => removeTransport(idx)} className="text-red-400 hover:text-red-500 ml-1 font-extrabold cursor-pointer">×</button>
               </span>
             ))}
           </div>
@@ -260,7 +271,10 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
           <div className="flex flex-col w-full">
+            <label htmlFor="manual-food-item-input" className="sr-only">Meal description</label>
             <input
+              id="manual-food-item-input"
+              aria-label="Meal description word input"
               type="text"
               placeholder="Example: Paneer sabzi, Dal fry"
               value={tempFoodItem}
@@ -279,7 +293,10 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
           </div>
 
           <div className="flex gap-2 w-full">
+            <label htmlFor="manual-food-type-select" className="sr-only">Select meal type</label>
             <select
+              id="manual-food-type-select"
+              aria-label="Select meal type category"
               value={tempFoodType}
               onChange={(e) => setTempFoodType(e.target.value as FoodType)}
               className="flex-1 min-w-0 bg-[#1B2119] text-[#E8F0E3] text-xs font-semibold p-2.5 border border-[#2C342B] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none"
@@ -294,6 +311,7 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
             <button
               type="button"
               onClick={addFood}
+              aria-label="Add meal entry"
               className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold px-4 py-2.5 rounded-xl text-xs transition duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0 hover:scale-[1.02] active:scale-[0.97]"
               disabled={!tempFoodItem.trim()}
             >
@@ -307,7 +325,7 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
             {foods.map((f, idx) => (
               <span key={idx} className="bg-emerald-950/60 text-[10px] text-emerald-450 border border-emerald-900 font-bold px-2 py-1 rounded-lg flex items-center gap-1">
                 <span>{f.item}</span> <span className="text-slate-450 font-normal">({f.type})</span>
-                <button type="button" onClick={() => removeFood(idx)} className="text-red-400 hover:text-red-500 ml-1 font-extrabold cursor-pointer">×</button>
+                <button type="button" aria-label={`Remove meal item ${f.item}`} onClick={() => removeFood(idx)} className="text-red-400 hover:text-red-500 ml-1 font-extrabold cursor-pointer">×</button>
               </span>
             ))}
           </div>
@@ -317,10 +335,11 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
       {/* Household & Utilities row */}
       <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 w-full">
         <div className="bg-[#121714] border border-[#2C342B] p-4 rounded-xl shadow-xs space-y-1">
-          <label className="text-xs font-semibold uppercase tracking-wide text-emerald-400 block">
+          <label htmlFor="manual-electricity-input" className="text-xs font-semibold uppercase tracking-wide text-emerald-400 block">
             ⚡ Electricity Used (units)
           </label>
           <input
+            id="manual-electricity-input"
             type="number"
             min={0}
             step={0.5}
@@ -331,10 +350,11 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
         </div>
 
         <div className="bg-[#121714] border border-[#2C342B] p-4 rounded-xl shadow-xs space-y-1">
-          <label className="text-xs font-semibold uppercase tracking-wide text-emerald-400 block">
+          <label htmlFor="manual-ac-hours-input" className="text-xs font-semibold uppercase tracking-wide text-emerald-400 block">
             ❄️ AC Used (hours)
           </label>
           <input
+            id="manual-ac-hours-input"
             type="number"
             min={0}
             max={24}
@@ -348,10 +368,11 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
       {/* Recycling details */}
       <div className="bg-[#121714] border border-[#2C342B] p-4 rounded-xl flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between gap-3 shadow-xs">
         <div className="space-y-1 w-full min-[420px]:w-auto">
-          <label className="text-xs font-semibold uppercase tracking-wide text-emerald-400 block">
+          <label htmlFor="manual-plastic-items-input" className="text-xs font-semibold uppercase tracking-wide text-emerald-400 block">
             🗑️ Discarded Plastic Items
           </label>
           <input
+            id="manual-plastic-items-input"
             type="number"
             min={0}
             value={plasticItems}
@@ -366,6 +387,7 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
             <button
               type="button"
               onClick={() => setRecycled(true)}
+              aria-label="Yes, plastic was recycled"
               className={`p-2 px-4 rounded-xl text-xs font-bold border transition duration-150 cursor-pointer shadow-xs hover:scale-[1.02] active:scale-[0.97] ${
                 recycled 
                   ? "bg-green-600 text-white border-green-600 shadow-green-500/10" 
@@ -377,6 +399,7 @@ export default function ManualLogger({ onAddEntry }: ManualLoggerProps) {
             <button
               type="button"
               onClick={() => setRecycled(false)}
+              aria-label="No, plastic was not recycled"
               className={`p-2 px-4 rounded-xl text-xs font-bold border transition duration-150 cursor-pointer shadow-xs hover:scale-[1.02] active:scale-[0.97] ${
                 !recycled 
                   ? "bg-amber-600 text-white border-amber-600 shadow-amber-500/10" 

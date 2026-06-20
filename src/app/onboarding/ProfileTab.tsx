@@ -4,7 +4,7 @@ import { UserProfile } from "../../lib/firebase";
 import { Leaf, Award, Shield, FileText, RefreshCw, Trash2 } from "lucide-react";
 
 interface ProfileTabProps {
-  user: any;
+  user: { email?: string | null; displayName?: string | null; metadata?: { creationTime?: string } } | null;
   userProfile: UserProfile | null;
   onResetOnboarding: () => void;
   entriesCount: number;

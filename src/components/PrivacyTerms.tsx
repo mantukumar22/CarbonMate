@@ -6,9 +6,21 @@ interface PrivacyTermsProps {
 }
 
 export default function PrivacyTerms({ onClose }: PrivacyTermsProps) {
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    modalRef.current?.focus();
+  }, []);
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto" id="privacy-terms-compliance-overlay">
-      <div className="bg-[#1B2119] rounded-[32px] border border-[#2C342B] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div 
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        tabIndex={-1}
+        className="bg-[#1B2119] rounded-[32px] border border-[#2C342B] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200 outline-none"
+      >
         
         {/* Modal Header */}
         <header className="p-6 border-b border-[#2C342B] flex items-center justify-between bg-slate-900 shrink-0">
@@ -17,12 +29,13 @@ export default function PrivacyTerms({ onClose }: PrivacyTermsProps) {
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-[#E8F0E3]">Privacy Policy & Terms of Service</h3>
+              <h3 id="modal-title" className="text-base font-extrabold text-[#E8F0E3]">Privacy Policy & Terms of Service</h3>
               <p className="text-[10px] text-[#A8B8AA] font-bold uppercase tracking-wider">CarbonMate Compliance Hub</p>
             </div>
           </div>
           <button 
             onClick={onClose}
+            aria-label="Close dialog"
             className="w-8 h-8 rounded-full hover:bg-[#121714] border border-[#2C342B] flex items-center justify-center text-[#A8B8AA] hover:text-[#E8F0E3] transition cursor-pointer"
             id="close-privacy-btn"
           >
